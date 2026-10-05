@@ -48,19 +48,60 @@ class PZScanner:
 
     @staticmethod
     def detect_steam_workshop_paths() -> List[Path]:
-        """尝试自动探测 PZ 创意工坊存放目录 (108600)"""
+        """尝试自动探测 PZ 创意工坊存放目录 (108600) 及本地 mods 目录"""
         candidates = []
         if sys.platform == "win32":
-            # 常见盘符探测
-            drives = [f"{chr(d)}:" for d in range(ord('C'), ord('H') + 1)]
+            # 扩展 A-Z 所有盘符全量探测
+            drives = [f"{chr(d)}:/" for d in range(ord('C'), ord('Z') + 1)] + ["A:/", "B:/"]
             for drive in drives:
                 candidates.append(Path(drive) / "SteamLibrary" / "steamapps" / "workshop" / "content" / "108600")
+                candidates.append(Path(drive) / "Steam" / "steamapps" / "workshop" / "content" / "108600")
                 candidates.append(Path(drive) / "Program Files (x86)" / "Steam" / "steamapps" / "workshop" / "content" / "108600")
+                candidates.append(Path(drive) / "Program Files" / "Steam" / "steamapps" / "workshop" / "content" / "108600")
         else:
             candidates.append(Path.home() / ".local/share/Steam/steamapps/workshop/content/108600")
             candidates.append(Path.home() / ".steam/steam/steamapps/workshop/content/108600")
+            candidates.append(Path.home() / ".steam/root/steamapps/workshop/content/108600")
+
+        # 同时加入本地用户文档目录下的 Zomboid/mods
+        zomboid_mods = PZScanner.get_default_zomboid_dir() / "mods"
+        if zomboid_mods.exists():
+            candidates.append(zomboid_mods)
 
         return [p for p in candidates if p.exists() and p.is_dir()]
+
+    @classmethod
+    def scan_any_directory(cls, target_path: Path) -> List[PZModInfo]:
+        """智能扫描任意指定目录：自动识别工坊 108600、包含 108600 的父层、或者纯本地 Mod 目录"""
+        if not target_path or not target_path.exists():
+            return []
+
+        # 1. 如果用户指向了包含 108600 的上级目录，自动下探
+        if (target_path / "108600").is_dir():
+            return cls.scan_workshop_mods(target_path / "108600")
+        if (target_path / "steamapps" / "workshop" / "content" / "108600").is_dir():
+            return cls.scan_workshop_mods(target_path / "steamapps" / "workshop" / "content" / "108600")
+        if (target_path / "workshop" / "content" / "108600").is_dir():
+            return cls.scan_workshop_mods(target_path / "workshop" / "content" / "108600")
+
+        # 2. 如果当前目录名就是 108600 或者子目录是纯数字，按工坊处理
+        has_digit_dirs = any(p.is_dir() and p.name.isdigit() for p in target_path.iterdir() if p.is_dir())
+        if target_path.name == "108600" or has_digit_dirs:
+            return cls.scan_workshop_mods(target_path)
+
+        # 3. 泛化遍历模式：深度搜索所有 mod.info
+        discovered = []
+        for root, _, files in os.walk(target_path):
+            if "mod.info" in files:
+                info_path = Path(root) / "mod.info"
+                # 尝试从路径层次中提取纯数字的工坊ID
+                workshop_id = None
+                for part in reversed(info_path.parts[:-1]):
+                    if part.isdigit() and len(part) >= 6:
+                        workshop_id = part
+                        break
+                discovered.extend(cls.parse_mod_info_file(info_path, workshop_id=workshop_id))
+        return discovered
 
     @classmethod
     def parse_mod_info_file(cls, info_file: Path, workshop_id: Optional[str] = None) -> List[PZModInfo]:

@@ -1,0 +1,4 @@
+# 核心纯标准库优先设计，保持零依赖或仅需轻量库
+# 如果采用轻量现代本地网页UI（无需繁琐的TK丑界面），可选：
+# pip install -r requirements.txt
+requests>=2.28.0

@@ -21,239 +21,411 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PZ Mod 提取与配置生成器 - 狐玖终端</title>
+    <title>PZ Mod 提取与配置生成器</title>
     <style>
         :root {
-            --crimson: #e62e43;
-            --crimson-hover: #c9182d;
-            --crimson-glow: rgba(230, 46, 67, 0.35);
-            --pure-white: #ffffff;
-            --silk-white: #fcf8fa;
-            --soft-pink: #f9a8d4;
-            --soft-pink-bg: rgba(249, 168, 212, 0.08);
-            --obsidian-bg: #0d0c10;
-            --card-bg: rgba(22, 19, 26, 0.92);
-            --card-hover: rgba(30, 24, 35, 0.98);
-            --border-dim: rgba(249, 168, 212, 0.14);
-            --border-highlight: rgba(230, 46, 67, 0.4);
-            --gold-accent: #f6c453;
-            --gold-bg: rgba(246, 196, 83, 0.12);
-            --gold-border: rgba(246, 196, 83, 0.35);
-            --jade-green: #34d399;
-            --jade-bg: rgba(52, 211, 153, 0.12);
-            --jade-border: rgba(52, 211, 153, 0.3);
-            --text-dim: #9ca3af;
+            --vermilion: #b92b3a;
+            --vermilion-dark: #8b1825;
+            --vermilion-soft: #d33a4c;
+            --sidebar-bg: #8c1d28;
+            --sidebar-pattern: #781721;
+            --paper-cream: #faf5ee;
+            --paper-card: #ffffff;
+            --sakura-pink: #f7cbd6;
+            --sakura-subtle: #fcf1f4;
+            --gold-accent: #c59b4e;
+            --gold-soft: #dfbe79;
+            --text-ink: #2c2225;
+            --text-muted: #846f73;
+            --border-cherry: #eed8de;
+            --border-soft: #f2e6e8;
+            --jade: #38a169;
+            --jade-bg: #edfbf3;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: radial-gradient(circle at 15% 15%, #1f1522 0%, var(--obsidian-bg) 55%, #08080a 100%);
-            color: var(--silk-white);
-            padding: 28px 20px;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--paper-cream);
+            color: var(--text-ink);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
-            justify-content: center;
+            align-items: stretch;
+            justify-content: stretch;
+            padding: 0;
+            margin: 0;
         }
-        .container {
+        /* 主窗体：铺满全屏，空间无界 */
+        .window-frame {
+            display: flex;
             width: 100%;
-            max-width: 1100px;
+            height: 100vh;
+            background: var(--paper-cream);
+            border-radius: 0;
+            overflow: hidden;
+            border: none;
+            box-shadow: none;
+            position: relative;
         }
-        header {
+        /* 左侧赤朱侧边栏 */
+        .sidebar {
+            width: 96px;
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--vermilion-dark) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 26px 0;
+            position: relative;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.08), transparent 70%);
+            pointer-events: none;
+        }
+        .crest-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 36px;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .crest-icon:hover { transform: scale(1.06); }
+        .nav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            align-items: center;
+        }
+        .nav-item {
+            width: 78px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .nav-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .nav-item.active {
+            color: var(--vermilion);
+            background: var(--paper-cream);
+            box-shadow: -4px 4px 14px rgba(0, 0, 0, 0.12);
+            font-weight: bold;
+        }
+        .sidebar-bottom {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* 右侧主体卷轴内容 */
+        .main-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 36px;
+            overflow-y: auto;
+            background: radial-gradient(circle at 90% 10%, #fffbf8 0%, var(--paper-cream) 70%);
+        }
+        
+        /* 顶部落樱富士风雅横幅 */
+        .banner-art {
+            width: 100%;
+            height: 120px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #fcdde4 0%, #fbe8ec 40%, #e8f0fe 80%, #fed8df 100%);
+            border: 1px solid var(--border-cherry);
+            padding: 20px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 22px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid var(--border-dim);
             position: relative;
+            overflow: hidden;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 16px rgba(220, 160, 175, 0.15);
         }
-        header::after {
-            content: '';
+        .banner-art::before {
+            content: '🌸 ⛩️ 富士雪霽 · 櫻落神社 🌸';
             position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 120px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--crimson), var(--soft-pink), transparent);
+            right: 24px;
+            bottom: 12px;
+            font-size: 13px;
+            color: rgba(185, 43, 58, 0.35);
+            font-weight: 600;
+            letter-spacing: 2px;
         }
-        .title-group h1 {
-            font-size: 23px;
-            color: var(--pure-white);
+        .banner-text h2 {
+            font-size: 22px;
+            color: var(--vermilion-dark);
             display: flex;
             align-items: center;
             gap: 10px;
-            letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
-        .title-group h1 .brand-badge {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--crimson);
-            background: #fff;
-            padding: 2px 7px;
-            border-radius: 6px;
-            letter-spacing: 0.8px;
-            border: 1px solid var(--soft-pink);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
-        }
-        .title-group p {
+        .banner-text p {
             font-size: 13px;
-            color: var(--soft-pink);
-            opacity: 0.85;
-            margin-top: 5px;
+            color: var(--text-muted);
+        }
+        .banner-badge {
+            background: var(--paper-card);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-cherry);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--vermilion);
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
-        .actions { display: flex; gap: 10px; align-items: center; }
+
+        /* 顶部神社分类标签按钮 */
+        .jinja-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .jinja-tab {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--paper-card);
+            border: 1px solid var(--border-cherry);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .jinja-tab:hover {
+            border-color: var(--vermilion-soft);
+            color: var(--vermilion);
+            transform: translateY(-1px);
+        }
+        .jinja-tab.active {
+            background: #fff;
+            border: 2px solid var(--vermilion);
+            color: var(--vermilion);
+            box-shadow: 0 4px 12px rgba(185, 43, 58, 0.12);
+        }
+
+        /* 手动路径与工坊操作栏 */
+        .path-box {
+            background: var(--paper-card);
+            border: 1px solid var(--border-cherry);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+        .path-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .path-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .path-input-group input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-cherry);
+            background: var(--sakura-subtle);
+            color: var(--text-ink);
+            outline: none;
+            font-size: 13px;
+            transition: border-color 0.2s ease;
+        }
+        .path-input-group input:focus {
+            border-color: var(--vermilion);
+            background: #fff;
+        }
+
+        /* 搜索栏与操作按键 */
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .search-container {
+            flex: 1;
+            position: relative;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-cherry);
+            background: #ffffff;
+            color: var(--text-ink);
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .search-container input:focus {
+            border-color: var(--vermilion);
+            box-shadow: 0 0 10px rgba(211, 58, 76, 0.15);
+        }
+        
         button {
             padding: 9px 18px;
-            border-radius: 9px;
+            border-radius: 11px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             border: none;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--crimson) 0%, #db2777 100%);
-            color: var(--pure-white);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 14px var(--crimson-glow);
+        .btn-vermilion {
+            background: linear-gradient(135deg, var(--vermilion) 0%, var(--vermilion-soft) 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(185, 43, 58, 0.28);
         }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--crimson-hover) 0%, #be185d 100%);
+        .btn-vermilion:hover {
+            background: linear-gradient(135deg, var(--vermilion-dark) 0%, var(--vermilion) 100%);
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(230, 46, 67, 0.5);
+            box-shadow: 0 6px 18px rgba(185, 43, 58, 0.38);
         }
-        .btn-secondary {
-            background: var(--card-bg);
-            color: var(--silk-white);
-            border: 1px solid var(--border-dim);
-            backdrop-filter: blur(8px);
+        .btn-outline {
+            background: var(--paper-card);
+            border: 1px solid var(--border-cherry);
+            color: var(--text-ink);
         }
-        .btn-secondary:hover {
-            background: var(--soft-pink-bg);
-            border-color: var(--soft-pink);
-            color: var(--pure-white);
+        .btn-outline:hover {
+            border-color: var(--vermilion);
+            color: var(--vermilion);
+            background: var(--sakura-subtle);
             transform: translateY(-1px);
         }
-        .search-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 11px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border-dim);
-            background: var(--card-bg);
-            color: var(--pure-white);
-            outline: none;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        .search-bar input:focus {
-            border-color: var(--soft-pink);
-            box-shadow: 0 0 12px rgba(249, 168, 212, 0.2);
-            background: rgba(28, 22, 33, 0.95);
-        }
-        .search-bar input::placeholder {
-            color: #71717a;
-        }
-        .mod-stats {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-bottom: 14px;
+
+        /* 统计与状态 */
+        .status-strip {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
             padding: 0 4px;
         }
-        .mod-stats .highlight-count {
-            color: var(--gold-accent);
-            font-weight: 600;
+        .status-strip .counter-num {
+            color: var(--vermilion);
+            font-weight: 700;
+            font-size: 14px;
         }
+
+        /* 模组列表与卡片 */
         .mod-list {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 9px;
-            max-height: 64vh;
+            gap: 10px;
             overflow-y: auto;
-            padding-right: 6px;
+            min-height: 0;
+            padding-right: 8px;
         }
         .mod-list::-webkit-scrollbar { width: 6px; }
         .mod-list::-webkit-scrollbar-thumb {
-            background: rgba(249, 168, 212, 0.25);
+            background: #e4c8cf;
             border-radius: 4px;
         }
-        .mod-list::-webkit-scrollbar-thumb:hover {
-            background: var(--soft-pink);
-        }
+        .mod-list::-webkit-scrollbar-thumb:hover { background: var(--vermilion-soft); }
+
         .mod-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-dim);
-            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid var(--border-cherry);
+            border-radius: 14px;
             padding: 13px 18px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 16px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
         .mod-card::before {
             content: '';
             position: absolute;
             left: 0;
-            top: 15%;
-            bottom: 15%;
+            top: 20%;
+            bottom: 20%;
             width: 3px;
-            border-radius: 0 3px 3px 0;
             background: transparent;
+            border-radius: 0 3px 3px 0;
             transition: background 0.2s ease;
         }
         .mod-card:hover {
-            background: var(--card-hover);
-            border-color: rgba(249, 168, 212, 0.35);
+            border-color: var(--sakura-pink);
             transform: translateX(2px);
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 14px rgba(185, 43, 58, 0.08);
         }
         .mod-card:hover::before {
-            background: linear-gradient(180deg, var(--crimson), var(--soft-pink));
+            background: var(--vermilion);
         }
         .mod-card.disabled {
-            opacity: 0.45;
-            filter: grayscale(40%);
+            opacity: 0.55;
+            background: #fbf9f9;
         }
         .mod-card input[type="checkbox"] {
             width: 19px;
             height: 19px;
-            accent-color: var(--crimson);
+            accent-color: var(--vermilion);
             cursor: pointer;
-            border-radius: 4px;
         }
         .mod-info { flex: 1; min-width: 0; }
         .mod-name-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             flex-wrap: wrap;
         }
         .mod-name {
             font-weight: 600;
-            font-size: 14.5px;
-            color: var(--pure-white);
-            letter-spacing: 0.2px;
+            font-size: 14px;
+            color: var(--text-ink);
         }
         .badge {
             font-size: 11px;
             padding: 2px 7px;
-            border-radius: 5px;
+            border-radius: 6px;
             font-weight: 600;
             line-height: 1.4;
             display: inline-flex;
@@ -261,57 +433,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             gap: 3px;
         }
         .badge-warn {
-            background: var(--gold-bg);
-            color: var(--gold-accent);
-            border: 1px solid var(--gold-border);
+            background: #fff7e6;
+            color: #d46b08;
+            border: 1px solid #ffd591;
         }
         .badge-id {
-            background: var(--jade-bg);
-            color: var(--jade-green);
-            border: 1px solid var(--jade-border);
+            background: var(--sakura-subtle);
+            color: var(--vermilion-dark);
+            border: 1px solid var(--border-cherry);
             font-family: 'Fira Code', Consolas, monospace;
-            font-size: 11.5px;
+            font-size: 11px;
         }
         .mod-meta {
             font-size: 12px;
-            color: var(--text-dim);
+            color: var(--text-muted);
             display: flex;
             gap: 14px;
             align-items: center;
-            flex-wrap: wrap;
         }
         .workshop-link {
-            color: var(--soft-pink);
+            color: var(--vermilion);
             text-decoration: none;
             font-size: 12px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 3px 9px;
-            border-radius: 6px;
-            background: rgba(249, 168, 212, 0.08);
-            border: 1px solid rgba(249, 168, 212, 0.2);
+            border-radius: 8px;
+            background: var(--sakura-subtle);
+            border: 1px solid var(--border-cherry);
             transition: all 0.2s ease;
         }
         .workshop-link:hover {
-            background: rgba(249, 168, 212, 0.18);
-            border-color: var(--soft-pink);
+            background: var(--vermilion);
             color: #fff;
-            transform: translateY(-1px);
+            border-color: var(--vermilion);
         }
         #toast {
             position: fixed;
-            bottom: 28px;
-            right: 28px;
-            padding: 13px 24px;
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            bottom: 30px;
+            right: 30px;
+            padding: 12px 22px;
+            background: var(--vermilion);
             color: #fff;
-            border: 1px solid var(--jade-border);
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 13.5px;
             font-weight: 600;
             display: none;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            box-shadow: 0 8px 24px rgba(185, 43, 58, 0.35);
             animation: slideUp 0.3s ease-out;
             z-index: 999;
         }
@@ -322,45 +491,79 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="title-group">
-                <h1>
-                    <span>🦊 PZ Mod 提取配置面板</span>
-                    <span class="brand-badge">KITSUNE UI</span>
-                </h1>
-                <p>🌸 勾选需要部署到服务器的 Mod · 自动穿透多盘符工坊 · 智能标记客户端补丁</p>
+    <div class="window-frame">
+        <!-- 左侧赤朱侧栏 -->
+        <aside class="sidebar">
+            <div class="crest-icon" title="狐玖巫女之印">🌸</div>
+            <nav class="nav-list">
+                <div class="nav-item active" title="模组提取总览">⛩️</div>
+                <div class="nav-item" title="工坊穿透与扫描" onclick="document.getElementById('customPathInput').focus()">📂</div>
+                <div class="nav-item" title="全选/清空配置" onclick="toggleAll(true)">✨</div>
+                <div class="nav-item" title="重新探测" onclick="rescan()">🔄</div>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="nav-item" title="导出服务器配置" onclick="exportConfig()" style="color: var(--gold-soft);">💾</div>
             </div>
-            <div class="actions">
-                <button class="btn-secondary" onclick="toggleAll(true)">✓ 全选</button>
-                <button class="btn-secondary" onclick="toggleAll(false)">✗ 全清</button>
-                <button class="btn-primary" onclick="exportConfig()">💾 导出服务器清单</button>
-            </div>
-        </header>
+        </aside>
 
-        <div class="custom-path-bar" style="background: var(--card-bg); border: 1px solid var(--border-dim); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
-                <span style="color: var(--soft-pink); font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                    📂 手动指定 Mod 路径 / 工坊目录
-                </span>
-                <span id="current-scan-path" style="font-size: 12px; color: var(--text-dim); font-family: monospace;">正在加载路径状态...</span>
+        <!-- 右侧主舞台画卷 -->
+        <main class="main-stage">
+            <!-- 顶部富士雪霁和风横幅 -->
+            <div class="banner-art">
+                <div class="banner-text">
+                    <h2>
+                        <span>⛩️ 僵尸毁灭工程 Mod 配置萃取仪</span>
+                    </h2>
+                    <p>落樱如霰 · 自动穿透多盘 Steam 创意工坊 · 提取服务端专用 mod.info 与 WorkshopID</p>
+                </div>
+                <div class="banner-badge">
+                    <span>和风庭院</span>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="customPathInput" placeholder="输入工坊路径 (如 D:\\SteamLibrary\\steamapps\\workshop\\content\\108600) 或任意 Mod 文件夹..." style="flex: 1; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border-dim); background: rgba(13, 12, 16, 0.7); color: #fff; outline: none; font-size: 13px;">
-                <button class="btn-secondary" style="border-color: var(--border-highlight);" onclick="scanCustomPath()">🔍 载入此路径</button>
-                <button class="btn-secondary" onclick="rescan()">🔄 全盘自动重探</button>
+
+            <!-- 神社五段分类标签 (复刻图片风格) -->
+            <div class="jinja-tabs">
+                <div class="jinja-tab active" onclick="setTabFilter('all', this)">⛩️ 全部模组</div>
+                <div class="jinja-tab" onclick="setTabFilter('normal', this)">🌸 常规模组</div>
+                <div class="jinja-tab" onclick="setTabFilter('client', this)">🏮 客户端补丁/汉化</div>
+                <div class="jinja-tab" onclick="setTabFilter('active', this)">🦊 仅看已勾选</div>
+                <div class="jinja-tab" onclick="setTabFilter('inactive', this)">🍂 未启用模组</div>
             </div>
-        </div>
 
-        <div class="search-bar">
-            <input type="text" id="search" placeholder="🔍 搜索 Mod 名称、ModID 或 创意工坊 ID..." oninput="filterMods()">
-        </div>
+            <!-- 手动路径 / 探测状态栏 -->
+            <div class="path-box">
+                <div class="path-box-header">
+                    <span style="font-weight: 600; color: var(--vermilion-dark); display: flex; align-items: center; gap: 6px;">
+                        📂 Steam 创意工坊与模组目录
+                    </span>
+                    <span id="current-scan-path" style="font-size: 12px; color: var(--text-muted); font-family: monospace;">正在感知路径...</span>
+                </div>
+                <div class="path-input-group">
+                    <input type="text" id="customPathInput" placeholder="输入工坊路径 (如 D:\\Steam\\steamapps\\workshop\\content\\108600) 或任意 Mod 文件夹...">
+                    <button class="btn-outline" onclick="scanCustomPath()">🔍 载入此路径</button>
+                    <button class="btn-outline" onclick="rescan()">🔄 全盘重探</button>
+                </div>
+            </div>
 
-        <div class="mod-stats">
-            <span id="stat-count">正在加载 Mod 列表...</span>
-            <span style="color: var(--soft-pink); opacity: 0.9;">✦ 提示：UI/汉化/音效等客户端专用 Mod 建议取消勾选，以轻量化服务端启动</span>
-        </div>
-        <div class="mod-list" id="modList"></div>
+            <!-- 控制与搜索栏 -->
+            <div class="controls-row">
+                <div class="search-container">
+                    <input type="text" id="search" placeholder="🔍 键入名称、ModID 或 WorkshopID 进行即时筛选..." oninput="filterMods()">
+                </div>
+                <button class="btn-outline" onclick="toggleAll(true)">✓ 全选</button>
+                <button class="btn-outline" onclick="toggleAll(false)">✗ 全清</button>
+                <button class="btn-vermilion" onclick="exportConfig()">💾 导出清单</button>
+            </div>
+
+            <!-- 统计与说明 -->
+            <div class="status-strip">
+                <span id="stat-count">正在查阅模组卷轴...</span>
+                <span>✦ 温馨提示：带 🏮 标记的汉化或界面类 Mod，可酌情取消勾选以轻量化服务端</span>
+            </div>
+
+            <!-- 模组卷轴列表 -->
+            <div class="mod-list" id="modList"></div>
+        </main>
     </div>
 
     <div id="toast">导出成功！</div>
@@ -484,12 +687,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             filterMods();
         }
 
+        let currentTabFilter = 'all';
+
+        function setTabFilter(type, el) {
+            currentTabFilter = type;
+            document.querySelectorAll('.jinja-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            filterMods();
+        }
+
         function filterMods() {
             const q = document.getElementById('search').value.toLowerCase().trim();
             const filtered = allMods.filter(m => {
-                return m.name.toLowerCase().includes(q) ||
-                       m.mod_id.toLowerCase().includes(q) ||
-                       (m.workshop_id && m.workshop_id.includes(q));
+                const matchQuery = m.name.toLowerCase().includes(q) ||
+                                   m.mod_id.toLowerCase().includes(q) ||
+                                   (m.workshop_id && m.workshop_id.includes(q));
+                if (!matchQuery) return false;
+
+                if (currentTabFilter === 'active') return m.enabled;
+                if (currentTabFilter === 'inactive') return !m.enabled;
+                if (currentTabFilter === 'client') return m.client_only_suspect;
+                if (currentTabFilter === 'normal') return !m.client_only_suspect;
+                return true;
             });
             renderMods(filtered);
         }
